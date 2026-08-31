@@ -1,0 +1,64 @@
+# Contrato de la API de SmartModa. FUENTE DE VERDAD.
+#
+# Los clientes de Android y web se GENERAN desde aqui (AUT-05). Nadie escribe un DTO a mano.
+# Un cambio incompatible rompe la compilacion de los clientes en CI, que es exactamente
+# lo que queremos que pase.
+#
+# Estado: esqueleto del Sprint 0. Se llena en el Sprint 6 con EN-0006, cuando aparece core-api.
+# En la Fase 1 el cliente habla con Supabase a traves de la capa Repository (ADR-0004, ADR-0012).
+
+openapi: 3.1.0
+
+info:
+  title: SmartModa Core API
+  version: 0.1.0
+  description: |
+    API del nucleo: identidad, tenancy, catalogo, inventario, tallas, comercio y auditoria.
+
+    Reglas transversales que todo endpoint cumple:
+      - RN-009  el tenant se deriva del token, nunca de un parametro del cliente
+      - RN-010  todo POST con efecto de negocio acepta Idempotency-Key
+      - RN-031  toda accion administrativa genera registro de auditoria
+      - los errores siguen RFC 7807 (Problem Details) e incluyen trace_id
+
+servers:
+  - url: https://api.smartmoda.co/v1
+    description: Produccion (Fase 2 en adelante)
+
+security:
+  - bearerAuth: []
+
+paths: {}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, maxLength: 128 }
+      description: RN-010. La misma clave dos veces produce un solo efecto.
+
+  schemas:
+    Problem:
+      type: object
+      description: RFC 7807. `detail` es apto para mostrar al usuario; nunca lleva informacion interna.
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        trace_id: { type: string }
+
+    Confidence:
+      type: string
+      description: RN-016. Ninguna recomendacion de talla se emite sin este campo.
+      enum: [HIGH, MEDIUM, LOW, NONE]

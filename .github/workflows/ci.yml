@@ -1,0 +1,89 @@
+# AUT-01, AUT-02, AUT-10, AUT-18, AUT-23 · Integración continua
+#
+# Estos gates bloquean el merge. Los de rendimiento se pueden posponer;
+# los de seguridad, aislamiento y trazabilidad no.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------- dominio
+  dominio:
+    name: shared-domain · compilar y probar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar y probar
+        run: ./gradlew :shared-domain:check --no-daemon
+
+      # RNF-10: cobertura del dominio >= 85%. La tarea check ya lo verifica.
+      - name: Publicar informe de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-shared-domain
+          path: shared-domain/build/reports/jacoco/
+
+  # ---------------------------------------------------------------- trazabilidad
+  trazabilidad:
+    name: Reglas de negocio con prueba
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # AUT-18: toda RN-xxx documentada debe tener prueba o waiver declarado
+      - name: Verificar trazabilidad RN ⇄ prueba
+        run: python tools/check_traceability.py
+
+  # ---------------------------------------------------------------- secretos
+  secretos:
+    name: Sin secretos en el repositorio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # AUT-10: un secreto en el historial es un secreto filtrado, aunque se borre después
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------- documentación
+  documentacion:
+    name: Enlaces de documentación
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verificar que no hay enlaces rotos
+        run: python tools/check_docs_links.py

@@ -1,0 +1,51 @@
+# ---- Secretos y credenciales -------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.jks
+*.keystore
+local.properties
+google-services.json
+secrets.properties
+azure-devops/.ado_ids.json
+
+# ---- Gradle / JVM ------------------------------------------------------
+.gradle/
+build/
+out/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# ---- Android -----------------------------------------------------------
+*.apk
+*.aab
+*.ap_
+*.dex
+.cxx/
+captures/
+release/
+
+# ---- Web ---------------------------------------------------------------
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# ---- IDE ---------------------------------------------------------------
+.idea/
+!.idea/codeStyles/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ---- Sistema operativo -------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Temporales de Office ----------------------------------------------
+~$*

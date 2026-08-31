@@ -1,0 +1,222 @@
+{
+  "color": {
+    "neutral": {
+      "paper": {
+        "value": "oklch(0.99 0.003 70)"
+      },
+      "bone50": {
+        "value": "oklch(0.975 0.006 70)"
+      },
+      "sand100": {
+        "value": "oklch(0.945 0.008 70)"
+      },
+      "sand200": {
+        "value": "oklch(0.9 0.009 70)"
+      },
+      "sand300": {
+        "value": "oklch(0.82 0.01 70)"
+      },
+      "stone400": {
+        "value": "oklch(0.68 0.011 70)"
+      },
+      "stone600": {
+        "value": "oklch(0.52 0.012 70)"
+      },
+      "graphite800": {
+        "value": "oklch(0.36 0.012 70)"
+      },
+      "ink950": {
+        "value": "oklch(0.19 0.012 70)"
+      }
+    },
+    "accent": {
+      "clayTint": {
+        "value": "oklch(0.96 0.02 40)",
+        "tenantOverridable": true
+      },
+      "clayBase": {
+        "value": "oklch(0.53 0.145 40)",
+        "tenantOverridable": true
+      },
+      "clayVivid": {
+        "value": "oklch(0.62 0.14 40)",
+        "tenantOverridable": true
+      },
+      "clayText": {
+        "value": "oklch(0.44 0.12 40)",
+        "tenantOverridable": true
+      },
+      "clayPressed": {
+        "value": "oklch(0.32 0.09 40)",
+        "tenantOverridable": true
+      },
+      "indigoTint": {
+        "value": "oklch(0.96 0.02 265)",
+        "tenantOverridable": true
+      },
+      "indigoBase": {
+        "value": "oklch(0.53 0.145 265)",
+        "tenantOverridable": true
+      },
+      "indigoVivid": {
+        "value": "oklch(0.62 0.14 265)",
+        "tenantOverridable": true
+      },
+      "indigoText": {
+        "value": "oklch(0.44 0.12 265)",
+        "tenantOverridable": true
+      },
+      "indigoPressed": {
+        "value": "oklch(0.32 0.09 265)",
+        "tenantOverridable": true
+      }
+    },
+    "semantic": {
+      "_comment": "RN-026: no personalizables. Un error debe verse igual en todas las tiendas.",
+      "success": {
+        "value": "oklch(0.55 0.13 150)",
+        "tenantOverridable": false
+      },
+      "warning": {
+        "value": "oklch(0.66 0.14 80)",
+        "tenantOverridable": false
+      },
+      "error": {
+        "value": "oklch(0.52 0.19 15)",
+        "tenantOverridable": false
+      },
+      "info": {
+        "value": "oklch(0.53 0.145 265)",
+        "tenantOverridable": false
+      }
+    },
+    "dark": {
+      "background": {
+        "value": "oklch(0.16 0.008 70)"
+      },
+      "surface": {
+        "value": "oklch(0.21 0.009 70)"
+      },
+      "border": {
+        "value": "oklch(0.3 0.01 70)"
+      },
+      "textSecondary": {
+        "value": "oklch(0.72 0.01 70)"
+      },
+      "clayDark": {
+        "value": "oklch(0.72 0.11 40)"
+      },
+      "indigoDark": {
+        "value": "oklch(0.74 0.1 265)"
+      }
+    }
+  },
+  "space": {
+    "0": {
+      "value": 0
+    },
+    "1": {
+      "value": 4
+    },
+    "2": {
+      "value": 8
+    },
+    "3": {
+      "value": 12
+    },
+    "4": {
+      "value": 16
+    },
+    "5": {
+      "value": 20
+    },
+    "6": {
+      "value": 24
+    },
+    "8": {
+      "value": 32
+    },
+    "10": {
+      "value": 40
+    },
+    "12": {
+      "value": 48
+    },
+    "16": {
+      "value": 64
+    },
+    "20": {
+      "value": 80
+    }
+  },
+  "radius": {
+    "sm": {
+      "value": 6
+    },
+    "md": {
+      "value": 12
+    },
+    "lg": {
+      "value": 20
+    },
+    "full": {
+      "value": 999
+    }
+  },
+  "motion": {
+    "_comment": "US-1704: rango permitido al tenant 80-600 ms. prefers-reduced-motion anula el preajuste.",
+    "instant": {
+      "duration": 80,
+      "easing": "ease-out"
+    },
+    "quick": {
+      "duration": 160,
+      "easing": "ease-out"
+    },
+    "standard": {
+      "duration": 240,
+      "easing": "ease-in-out"
+    },
+    "slow": {
+      "duration": 400,
+      "easing": "ease-in-out"
+    }
+  },
+  "touchTargetMin": {
+    "value": 48,
+    "unit": "dp",
+    "_comment": "RNF-06, sin excepcion"
+  },
+  "contrastPairs": [
+    {
+      "fg": "color.neutral.graphite800",
+      "bg": "color.neutral.bone50",
+      "min": 4.5
+    },
+    {
+      "fg": "color.neutral.stone600",
+      "bg": "color.neutral.bone50",
+      "min": 4.5
+    },
+    {
+      "fg": "#FFFFFF",
+      "bg": "color.accent.clayBase",
+      "min": 4.5
+    },
+    {
+      "fg": "#FFFFFF",
+      "bg": "color.accent.indigoBase",
+      "min": 4.5
+    },
+    {
+      "fg": "color.accent.clayText",
+      "bg": "color.neutral.paper",
+      "min": 4.5
+    },
+    {
+      "fg": "color.accent.indigoText",
+      "bg": "color.neutral.paper",
+      "min": 4.5
+    }
+  ]
+}
