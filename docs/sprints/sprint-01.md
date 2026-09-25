@@ -16,7 +16,7 @@ defendido de fuerza bruta.
 | `US-0104` Inicio, cierre y recuperación | 5 | 🔴 Pendiente | UI y wiring |
 | `US-0105` Consentimiento explícito y versionado | 5 | 🟡 En curso | Dominio y esquema listos; falta UI |
 | `EN-1502` Reglas de seguridad y App Check | 5 | 🔴 Pendiente | — |
-| `EN-1510` Defensa contra fuerza bruta | 8 | 🟢 **Hecho** | Falta registrar el hook en el panel (1 clic) |
+| `EN-1510` Defensa contra fuerza bruta | 8 | 🟠 **Bloqueado por plan** | El hook exige Team/Enterprise. Ver abajo |
 
 ---
 
@@ -89,6 +89,46 @@ En Fase 1 el servidor de autenticación es Supabase, así que hay tres opciones:
 Lo honesto es hacer la primera ahora y la segunda en este sprint. Mientras tanto, **quien
 protege el endpoint son los límites de Supabase, no nuestro código**, y conviene tenerlo claro
 antes de dar `EN-1510` por cerrado.
+
+### El hook no se puede registrar en el plan gratuito
+
+Descubierto el 25-sep-2026 al intentar registrarlo: *Password Verification Attempt hook* está
+marcado como **Team or Enterprise Plan required**. En FREE no aparece.
+
+**Y la alternativa evidente no sirve.** Poner una Edge Function delante del login no protege
+nada: el endpoint real (`/auth/v1/token`) sigue siendo accesible con la clave anon, que va
+dentro del APK. Un atacante lo llama directo y se salta el proxy. Sería seguridad de adorno.
+
+En el plan gratuito **no controlamos el endpoint de autenticación**, y sin eso no hay política
+propia que se pueda imponer.
+
+#### Lo que sí protege, y está aplicado
+
+| Control | Dónde | Estado |
+|---|---|---|
+| CAPTCHA | *Authentication → Attack Protection* | **Activar** |
+| Límite de intentos de acceso | *Authentication → Rate Limits* | Revisar |
+| Longitud mínima 12 | Aplicado por script | ✅ |
+| Contraseñas filtradas (HIBP) | Aplicado por script | ✅ |
+| Rotación de refresh con detección de reuso | Por defecto en Supabase | ✅ |
+
+Estos corren **en el endpoint de Supabase**, así que no se esquivan. No son nuestra política
+completa, pero cubren el grueso de la amenaza.
+
+#### La brecha que queda, declarada
+
+Lo que **no** tenemos hasta el Sprint 6: bloqueo por cuenta con retroceso exponencial, y
+respuestas indistinguibles entre "cuenta no existe" y "contraseña incorrecta".
+
+El código está escrito y probado (`BruteForcePolicy.kt` y `0005_auth_hook.sql`, 20 pruebas
+contra Postgres real). No se retira: se activa el día que ocurra lo primero de estas dos cosas.
+
+| Disparador | Qué se hace |
+|---|---|
+| El negocio justifica el plan Team | Registrar el hook. Es un clic, el código ya existe |
+| Llega `core-api` (Sprint 6, `EN-1201`) | Controlamos el endpoint: se aplica `BruteForcePolicy` directamente y el hook SQL se retira |
+
+Riesgo `R-33`, aceptado con fecha de revisión.
 
 ### Pendiente concreto
 

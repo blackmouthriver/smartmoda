@@ -108,10 +108,27 @@ agotan en minutos.
 > El **access token** de la cuenta no es la clave `anon` ni la `service_role`. Sirve para
 > administrar proyectos y no debe acabar en ningún archivo del repositorio.
 
-### 6.2 Registrar el Auth Hook
+### 6.2 El Auth Hook: solo en plan Team o superior
 
-*Authentication → Hooks → **Password Verification Attempt** → Postgres → seleccionar
-`app.password_verification_hook`.*
+*Authentication → Auth Hooks → **Password Verification Attempt***
+
+> **En el plan gratuito esta opción aparece en gris.** Supabase la reserva a Team y Enterprise.
+> Comprobado el 25-sep-2026 en `smartmoda-dev`.
+
+Mientras tanto, lo que sí se puede y hay que hacer:
+
+1. *Authentication → **Attack Protection*** → activar **CAPTCHA** (hCaptcha o Turnstile).
+   Es el control más valioso disponible en FREE, porque se aplica en el endpoint de Supabase
+   y no se puede esquivar.
+2. *Authentication → **Rate Limits*** → revisar el límite de sign in / sign up.
+
+**Por qué no basta con una Edge Function delante del login:** el endpoint real
+`/auth/v1/token` sigue accesible con la clave anon, que va dentro del APK. Un atacante lo
+llama directo y se salta cualquier proxy nuestro. En el plan gratuito no controlamos el
+endpoint de autenticación, y sin eso no hay política propia que imponer.
+
+El código del hook no se retira: se registra el día que el plan lo permita, o se aplica desde
+`core-api` en el Sprint 6. Riesgo `R-33` en [docs/19](../docs/19-riesgos.md).
 
 Con eso, cada verificación de contraseña pasa por
 [`0005_auth_hook.sql`](migrations/0005_auth_hook.sql), que registra el intento y aplica el
