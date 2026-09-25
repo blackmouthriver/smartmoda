@@ -58,13 +58,26 @@ class BruteForcePolicyTest {
     }
 
     @Test
-    fun `el bloqueo es temporal y expira`() {
+    fun `el bloqueo se levanta cuando los fallos salen de la ventana`() {
         // Un bloqueo permanente convierte la fuerza bruta en denegacion de servicio: bastaria
         // fallar diez veces contra la cuenta de alguien para dejarlo fuera para siempre.
+        //
+        // La expiracion no necesita trabajo programado: al ser WINDOW y LOCKOUT iguales, el
+        // bloqueo termina justo cuando los fallos dejan de contarse.
         val historia = fallos(10)
         val despues = ahora + BruteForcePolicy.LOCKOUT_MILLIS + Timestamp.MINUTE
 
         BruteForcePolicy.evaluate(historia, despues) shouldBe AuthGate.Allow
+    }
+
+    @Test
+    fun `dentro del bloqueo se informa cuando se puede reintentar`() {
+        val g = BruteForcePolicy.evaluate(fallos(10), ahora)
+
+        g.shouldBeInstanceOf<AuthGate.Locked>()
+        // No basta con negar el acceso: dejar al usuario adivinando cuando reintentar es
+        // lo que hace que acabe llamando a soporte.
+        (g.until.since(ahora) <= BruteForcePolicy.LOCKOUT_MILLIS) shouldBe true
     }
 
     @Test

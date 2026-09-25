@@ -54,7 +54,16 @@ object BruteForcePolicy {
     /** Ventana en la que se cuentan los fallos. */
     const val WINDOW_MILLIS: Long = 15 * Timestamp.MINUTE
 
-    /** Duracion del bloqueo. */
+    /**
+     * Duracion del bloqueo, medida desde el ultimo fallo.
+     *
+     * Igual a [WINDOW_MILLIS] a proposito: el bloqueo termina exactamente cuando los fallos
+     * salen de la ventana de conteo. Eso lo hace auto-reparable sin ningun trabajo programado
+     * que limpie bloqueos caducados.
+     *
+     * Y es temporal por diseno. Uno permanente convertiria la fuerza bruta en denegacion de
+     * servicio: bastaria fallar diez veces contra la cuenta de alguien para dejarlo fuera.
+     */
     const val LOCKOUT_MILLIS: Long = 15 * Timestamp.MINUTE
 
     /** Tope del retroceso. Mas alla deja de disuadir y solo estorba al usuario legitimo. */
@@ -81,11 +90,14 @@ object BruteForcePolicy {
         if (consecutiveFailures == 0) return AuthGate.Allow
 
         if (consecutiveFailures >= LOCKOUT_THRESHOLD) {
-            val lastFailure = sinceLastSuccess.last().at
-            val until = lastFailure + LOCKOUT_MILLIS
-            if (until.isAfter(now)) return AuthGate.Locked(until)
-            // El bloqueo expiro: se permite reintentar, que es justo el punto de que sea temporal.
-            return AuthGate.Allow
+            // El bloqueo se levanta solo: WINDOW_MILLIS y LOCKOUT_MILLIS son iguales, asi que
+            // cuando expira el bloqueo los fallos ya salieron de la ventana y `recent` los
+            // descarta, devolviendo Allow unas lineas mas arriba. Escribir aqui una rama de
+            // expiracion seria codigo inalcanzable.
+            //
+            // `until` se devuelve igualmente porque es informacion util: dice al usuario
+            // cuando puede reintentar en lugar de dejarlo adivinando.
+            return AuthGate.Locked(sinceLastSuccess.last().at + LOCKOUT_MILLIS)
         }
 
         if (consecutiveFailures >= CHALLENGE_THRESHOLD) return AuthGate.Challenge

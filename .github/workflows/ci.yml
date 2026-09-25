@@ -91,6 +91,21 @@ jobs:
       - name: Verificar el mapa de datos
         run: python tools/check_data_map.py
 
+  # ---------------------------------------------------------------- sql
+  sql:
+    name: Migraciones y Auth Hook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # EN-1510: el hook es un control de seguridad. Se ejecuta contra Postgres real porque
+      # RLS, reglas y SECURITY DEFINER no se comportan igual en ningun sustituto.
+      - name: Aplicar migraciones y probar el hook
+        run: python tools/run_sql_tests.py
+
   # ---------------------------------------------------------------- trazabilidad
   trazabilidad:
     name: Reglas de negocio con prueba

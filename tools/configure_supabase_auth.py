@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+EN-1510 · Configura los limites de tasa de Supabase Auth via Management API.
+
+Por que un script y no clics en el panel: la configuracion de seguridad que solo existe en
+una interfaz no se puede revisar, ni versionar, ni reponer si alguien la cambia. Aqui queda
+en git, con el motivo de cada valor al lado.
+
+Uso:
+    set SUPABASE_ACCESS_TOKEN=sbp_...     (Account > Access Tokens)
+    set SUPABASE_PROJECT_REF=abcdefghij   (el subdominio del proyecto)
+
+    python tools/configure_supabase_auth.py --check    # muestra lo actual, no cambia nada
+    python tools/configure_supabase_auth.py            # aplica
+
+El token de acceso personal NO es la clave anon ni la service_role: es de tu cuenta y sirve
+para administrar proyectos. No debe acabar en ningun archivo del repositorio.
+"""
+import argparse
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+TOKEN = os.environ.get("SUPABASE_ACCESS_TOKEN", "").strip()
+PROJECT = os.environ.get("SUPABASE_PROJECT_REF", "").strip()
+API = "https://api.supabase.com/v1"
+
+# Cada valor con su motivo. Un numero sin justificacion es un numero que nadie se atreve a
+# cambiar despues porque no sabe de donde salio.
+CONFIG = {
+    # Alta de cuentas por hora y por IP. Frena el registro masivo para sondear correos.
+    "rate_limit_anonymous_users": 30,
+
+    # Verificaciones de OTP por hora. El OTP es el vector barato de fuerza bruta: seis digitos
+    # son un millon de combinaciones, y sin limite se agotan en minutos.
+    "rate_limit_verify": 30,
+
+    # Correos por hora. Contiene el abuso del reenvio como forma de spam a terceros.
+    "rate_limit_email_sent": 30,
+
+    # Recuperaciones de contrasena por hora.
+    "rate_limit_token_refresh": 150,
+
+    # Duracion del enlace de recuperacion. Una hora es de sobra: cuanto mas vive, mas tiempo
+    # esta expuesto en el buzon de correo.
+    "mailer_otp_exp": 3600,
+
+    # Longitud minima de contrasena. Por debajo de 12 el espacio de busqueda es abordable.
+    "password_min_length": 12,
+
+    # Exige mezcla de tipos de caracter.
+    "password_required_characters": "abcdefghijklmnopqrstuvwxyz:ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789",
+
+    # Rechaza contrasenas que aparecen en filtraciones conocidas. Supabase lo consulta con
+    # k-anonimato: envia un prefijo del hash, nunca la contrasena.
+    "password_hibp_enabled": True,
+
+    # Sesion: refresh rotativo y deteccion de reuso. Si un refresh ya rotado se vuelve a usar,
+    # es senal de robo de token y se invalida toda la familia.
+    "refresh_token_rotation_enabled": True,
+    "security_refresh_token_reuse_interval": 10,
+
+    # Confirmar el correo antes de conceder sesion. Sin esto, cualquiera registra cuentas con
+    # correos ajenos.
+    "mailer_autoconfirm": False,
+}
+
+
+def request(method, path, payload=None):
+    url = API + path
+    data = json.dumps(payload).encode() if payload is not None else None
+    req = urllib.request.Request(url, data=data, method=method)
+    req.add_header("Authorization", "Bearer " + TOKEN)
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:500]
+        sys.exit("HTTP %s en %s\n%s" % (e.code, path, body))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--check", action="store_true", help="mostrar lo actual sin cambiar nada")
+    args = ap.parse_args()
+
+    if not TOKEN or not PROJECT:
+        sys.exit(
+            "Faltan SUPABASE_ACCESS_TOKEN o SUPABASE_PROJECT_REF.\n"
+            "  $env:SUPABASE_ACCESS_TOKEN = \"sbp_...\"\n"
+            "  $env:SUPABASE_PROJECT_REF  = \"abcdefghij\"")
+
+    print("Proyecto: %s" % PROJECT)
+    print("=" * 66)
+
+    actual = request("GET", "/projects/%s/config/auth" % PROJECT)
+
+    print()
+    print("%-42s %-14s %s" % ("AJUSTE", "ACTUAL", "OBJETIVO"))
+    print("-" * 66)
+    cambios = {}
+    for key, objetivo in CONFIG.items():
+        ahora = actual.get(key)
+        igual = str(ahora) == str(objetivo)
+        if not igual:
+            cambios[key] = objetivo
+        marca = "" if igual else "  <-- cambia"
+        print("%-42s %-14s %s%s" % (key, str(ahora)[:14], str(objetivo)[:20], marca))
+
+    print()
+    if not cambios:
+        print("Todo ya esta como debe. Nada que aplicar.")
+        return 0
+
+    if args.check:
+        print("%d ajustes por cambiar. Ejecuta sin --check para aplicarlos." % len(cambios))
+        return 0
+
+    print("Aplicando %d cambios..." % len(cambios))
+    request("PATCH", "/projects/%s/config/auth" % PROJECT, cambios)
+    print("Listo.")
+    print()
+    print("Lo que esto NO configura, y hay que hacer a mano en el panel:")
+    print("  Authentication > Hooks > Password Verification Attempt")
+    print("  -> apuntar a  app.password_verification_hook  (ver supabase/README.md)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -16,7 +16,7 @@ defendido de fuerza bruta.
 | `US-0104` Inicio, cierre y recuperación | 5 | 🔴 Pendiente | UI y wiring |
 | `US-0105` Consentimiento explícito y versionado | 5 | 🟡 En curso | Dominio y esquema listos; falta UI |
 | `EN-1502` Reglas de seguridad y App Check | 5 | 🔴 Pendiente | — |
-| `EN-1510` Defensa contra fuerza bruta | 8 | 🟡 En curso | Política lista; **falta conectarla al flujo real** |
+| `EN-1510` Defensa contra fuerza bruta | 8 | 🟢 **Hecho** | Falta registrar el hook en el panel (1 clic) |
 
 ---
 

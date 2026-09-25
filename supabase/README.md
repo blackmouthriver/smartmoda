@@ -83,6 +83,64 @@ En GitHub → *Settings → Secrets and variables → Actions → New repository
 
 ---
 
+## 6. Endurecer la autenticación (`EN-1510`)
+
+Dos pasos. El primero es un script; el segundo hay que hacerlo en el panel porque los hooks no
+se pueden registrar por API.
+
+### 6.1 Límites de tasa
+
+```powershell
+$env:SUPABASE_ACCESS_TOKEN = "sbp_..."   # Account > Access Tokens
+$env:SUPABASE_PROJECT_REF  = "tu-project-ref"
+```
+
+```powershell
+python tools/configure_supabase_auth.py --check
+```
+
+Muestra qué cambiaría sin tocar nada. Si te cuadra, ejecuta sin `--check`.
+
+Cada valor lleva su motivo al lado en el script. El más importante es
+`rate_limit_verify`: el OTP de seis dígitos son un millón de combinaciones, y sin límite se
+agotan en minutos.
+
+> El **access token** de la cuenta no es la clave `anon` ni la `service_role`. Sirve para
+> administrar proyectos y no debe acabar en ningún archivo del repositorio.
+
+### 6.2 Registrar el Auth Hook
+
+*Authentication → Hooks → **Password Verification Attempt** → Postgres → seleccionar
+`app.password_verification_hook`.*
+
+Con eso, cada verificación de contraseña pasa por
+[`0005_auth_hook.sql`](migrations/0005_auth_hook.sql), que registra el intento y aplica el
+retroceso, el desafío y el bloqueo.
+
+**Por qué aquí y no en la app:** una defensa aplicada en el cliente no defiende de nada. Quien
+ataca llama a la API directamente y nunca ejecuta la aplicación. Este hook corre *dentro* de
+Supabase Auth, antes de conceder la sesión.
+
+**Una deuda que conviene conocer.** El hook duplica en SQL la lógica de
+`shared-domain/auth/BruteForcePolicy.kt`. Dos implementaciones de la misma regla pueden
+divergir. Se asume porque es la única forma de tener la defensa en el servidor durante la
+Fase 1, y se controla así:
+
+- Las constantes viven en un solo sitio por lado (`app.bf_config` y el `object` de Kotlin).
+- `supabase/tests/test_auth_hook.sql` comprueba los **mismos casos** que
+  `BruteForcePolicyTest.kt`, **y además que las constantes coincidan**. Si alguien cambia un
+  umbral en un lado y no en el otro, la prueba falla.
+- En el Sprint 6, con `core-api`, el hook se retira y vuelve a haber una sola implementación.
+
+```bash
+python tools/run_sql_tests.py
+```
+
+Levanta PostgreSQL en Docker, aplica las cinco migraciones y ejecuta las pruebas. Es lo que
+demuestra que el hook hace lo que dice.
+
+---
+
 ## Una consecuencia de ADR-0004 que conviene tener presente
 
 En Fase 1 la app consulta la base de datos **directamente**, con una clave pública que va
