@@ -130,6 +130,37 @@ contra Postgres real). No se retira: se activa el día que ocurra lo primero de 
 
 Riesgo `R-33`, aceptado con fecha de revisión.
 
+### Contraseñas filtradas: bloqueado por plan, compensado en el cliente
+
+Confirmado por la API el 25-sep-2026, no solo por la interfaz:
+
+```
+HTTP 402  Configuring leaked password protection via HaveIBeenPwned.org
+          is available on Pro Plans and up.
+```
+
+`password_min_length = 12` **sí** se aplicó. Lo que el plan bloquea es solo el rechazo de
+contraseñas filtradas.
+
+**Aquí la compensación en el cliente sí es legítima**, al contrario que con la fuerza bruta.
+Comprobar si una contraseña está filtrada sirve para **ayudar a quien la está eligiendo**, y en
+ese momento el usuario no es el adversario. Que el atacante pueda saltarse la comprobación no
+resta nada: no iba dirigida a él.
+
+`shared-domain/auth/PasswordPolicy` lo implementa:
+
+| Regla | Detalle |
+|---|---|
+| Longitud mínima 12 | Coincide con Supabase; hay una prueba que lo fija |
+| Sin reglas de composición | NIST SP 800-63B: producen `Password1!` sin subir la entropía |
+| Rechazo de filtradas | Vía `BreachChecker`, con k-anonimato: salen 5 caracteres del hash |
+| Sin datos personales | Correo o nombre dentro de la contraseña |
+| Sin patrones triviales | Repeticiones, unidades repetidas y secuencias |
+| Si el servicio falla, **no bloquea** | Dejar a alguien sin registrarse porque un tercero está caído es peor (RN-019) |
+
+Pendiente para la pantalla: implementar `BreachChecker` con SHA-1 y la API de Pwned Passwords.
+El hash se calcula en el dispositivo y **solo viajan 5 caracteres del prefijo**.
+
 ### Consecuencia de activar CAPTCHA en las pantallas de acceso
 
 Con CAPTCHA activo, `signInWithPassword` y `signUp` **exigen un token de captcha**. Sin él,

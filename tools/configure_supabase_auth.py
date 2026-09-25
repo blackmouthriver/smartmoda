@@ -162,12 +162,47 @@ def main():
         return 0
 
     print("Aplicando %d cambios..." % len(cambios))
-    request("PATCH", "/projects/%s/config/auth" % PROJECT, cambios)
-    print("Listo.")
+    ruta = "/projects/%s/config/auth" % PROJECT
+    r = request("PATCH", ruta, cambios, tolerar_error=True)
+
+    bloqueados = []
+    if "__error__" in r:
+        # Un solo ajuste que el plan no permite tumba el PATCH entero. Se reintenta uno a
+        # uno para aplicar lo que si se puede: abortar dejaria sin aplicar ajustes
+        # perfectamente validos por culpa de otro.
+        print("  El lote fallo (HTTP %s). Reintentando ajuste por ajuste." % r["__error__"])
+        for key, valor in cambios.items():
+            ri = request("PATCH", ruta, {key: valor}, tolerar_error=True)
+            if "__error__" in ri:
+                codigo = ri["__error__"]
+                try:
+                    motivo = json.loads(ri["__body__"]).get("message", ri["__body__"])
+                except Exception:
+                    motivo = ri["__body__"]
+                # 402 Payment Required: la funcion existe pero el plan no la incluye.
+                etiqueta = "PLAN" if codigo == 402 else "ERROR"
+                print("  [%-5s] %-34s %s" % (etiqueta, key, motivo[:64]))
+                bloqueados.append((key, motivo))
+            else:
+                print("  [ok   ] %s" % key)
+    else:
+        print("  [ok   ] los %d cambios se aplicaron" % len(cambios))
+
+    if bloqueados:
+        print()
+        print("=" * 66)
+        print("AJUSTES QUE EL PLAN NO PERMITE")
+        for key, motivo in bloqueados:
+            print("  %s" % key)
+            print("    %s" % motivo[:90])
+        print()
+        print("No es un fallo de configuracion: la funcion existe pero requiere otro plan.")
+        print("Las compensaciones acordadas estan en docs/sprints/sprint-01.md.")
+
     print()
-    print("Lo que esto NO configura, y hay que hacer a mano en el panel:")
-    print("  Authentication > Hooks > Password Verification Attempt")
-    print("  -> apuntar a  app.password_verification_hook  (ver supabase/README.md)")
+    print("Lo que esto NO configura:")
+    print("  Auth Hooks > Password Verification Attempt  (requiere plan Team, R-33)")
+    print("  Attack Protection > CAPTCHA                 (lleva secretos del proveedor)")
     return 0
 
 
