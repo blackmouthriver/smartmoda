@@ -84,6 +84,13 @@ jobs:
       - name: Verificar ADR-0002 en las migraciones
         run: python tools/check_migrations.py
 
+      - name: Instalar PyYAML
+        run: pip install pyyaml
+
+      # EN-1501: ningun dato corporal puede vivir en un almacen del servidor (ADR-0003)
+      - name: Verificar el mapa de datos
+        run: python tools/check_data_map.py
+
   # ---------------------------------------------------------------- trazabilidad
   trazabilidad:
     name: Reglas de negocio con prueba

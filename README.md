@@ -44,6 +44,7 @@ Ingresos por **publicidad contextual** y **licencia por negocio o sucursal**
 | 18 | [ADR — decisiones de arquitectura](docs/adr/) | Decisiones irreversibles, con contexto y consecuencias |
 | 19 | [Riesgos](docs/19-riesgos.md) | Registro con nivel, mitigación y dueño |
 | 20 | [Preguntas abiertas / entrevista](docs/20-preguntas-abiertas.md) | Lo que necesito confirmar contigo |
+| 21 | [Mapa de datos](docs/21-mapa-de-datos.md) | Inventario verificable: clasificación, almacén, retención y base legal |
 
 ### Paquete de importación
 

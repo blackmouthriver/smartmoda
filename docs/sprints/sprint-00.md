@@ -19,7 +19,7 @@ tomar las decisiones que son caras de revertir.
 | `EN-0003` Repositorio, estrategia Git y plantillas | 3 | 🟢 **Hecho** | — |
 | `EN-0004` Integración continua | 5 | 🟢 **Hecho** | Validar el primer run en GitHub |
 | `EN-0005` Entornos y gestión de secretos | 3 | 🟡 **Casi** | Crear el proyecto Supabase y cargar 2 secretos en GitHub |
-| `EN-1501` Mapa de datos y modelo de amenazas | 5 | 🔴 **Pendiente** | Inventario de campos con clasificación y retención |
+| `EN-1501` Mapa de datos y modelo de amenazas | 5 | 🟢 **Hecho** | — |
 
 ---
 

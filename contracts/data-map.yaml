@@ -1,0 +1,290 @@
+# Mapa de datos de SmartModa · EN-1501
+#
+# Inventario de TODO dato personal o de negocio que el sistema toca: su clasificacion,
+# donde vive, cuanto se retiene y con que base legal.
+#
+# Este archivo no es documentacion: es un contrato verificado en CI.
+# tools/check_data_map.py comprueba que
+#   1. toda tabla y columna de supabase/migrations/ esta declarada aqui
+#   2. toda entidad de Room esta declarada aqui
+#   3. NINGUN dato CRITICO vive en un almacen del servidor (ADR-0003)
+#
+# El punto 3 es el que convierte una promesa de privacidad en una garantia comprobable.
+
+version: 1
+updated: "2026-09-25"
+owner: Privacidad
+
+# ---------------------------------------------------------------- clasificacion
+classifications:
+  CRITICO:
+    description: >
+      Datos corporales y biometricos: fotos de cuerpo, silueta, landmarks de pose, medidas,
+      avatar y rostro. Bajo Ley 1581 de 2012 son dato sensible con exigencia de autorizacion
+      previa, expresa, informada y cualificada.
+    rule: >
+      NO pueden almacenarse en ningun almacen del servidor. Viven cifrados en el dispositivo.
+      Si el usuario activa la sincronizacion, sube un blob que el servidor no puede descifrar.
+    allowed_stores: [device_room, device_keystore, memory_only]
+
+  ALTO:
+    description: Contrasenas, tokens, claves y datos de pago.
+    rule: >
+      Argon2id para contrasenas, boveda de claves o Keystore para material criptografico,
+      tokenizacion en la pasarela para pagos. Nunca el PAN.
+    allowed_stores: [supabase_auth, vault, device_keystore]
+
+  MEDIO:
+    description: Correo, nombre, historial de pruebas, favoritos, ordenes.
+    rule: Cifrado en reposo, acceso por rol, redactado en logs.
+    allowed_stores: [supabase, device_room, warehouse]
+
+  BAJO:
+    description: Catalogo, precios, tiendas. Publico por diseno.
+    rule: Sin restriccion particular.
+    allowed_stores: [supabase, device_room, warehouse, cdn]
+
+# ---------------------------------------------------------------- almacenes
+stores:
+  device_room:
+    kind: Room + SQLCipher
+    side: device
+    encrypted_at_rest: true
+    notes: Excluido de las copias del sistema (data_extraction_rules.xml)
+
+  device_keystore:
+    kind: Android Keystore
+    side: device
+    encrypted_at_rest: true
+    notes: Material de clave respaldado por hardware cuando el dispositivo lo permite
+
+  memory_only:
+    kind: Memoria del proceso
+    side: device
+    encrypted_at_rest: false
+    notes: Vive durante la sesion y se descarta. Nunca toca disco
+
+  supabase:
+    kind: PostgreSQL gestionado
+    side: server
+    encrypted_at_rest: true
+    notes: Fase 1. Se sustituye por core-api en el Sprint 6
+
+  supabase_auth:
+    kind: Supabase Auth
+    side: server
+    encrypted_at_rest: true
+    notes: Solo credenciales. Nunca datos corporales
+
+  warehouse:
+    kind: Almacen analitico columnar
+    side: server
+    encrypted_at_rest: true
+    notes: Fase 3. Solo agregados y seudonimos
+
+# ---------------------------------------------------------------- inventario
+datasets:
+
+  # ---- servidor: negocio ----------------------------------------------------
+  - table: tenant
+    store: supabase
+    classification: MEDIO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras dure el contrato. Facturacion y auditoria segun exigencia legal
+    subject: empresa
+    columns:
+      id: BAJO
+      legal_name: MEDIO
+      display_name: BAJO
+      tax_id: MEDIO
+      country_code: BAJO
+      currency: BAJO
+      subdomain: BAJO
+      status: BAJO
+      purge_after: BAJO
+      created_at: BAJO
+      updated_at: BAJO
+
+  - table: brand
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras el tenant este activo
+    subject: empresa
+    columns: { id: BAJO, tenant_id: BAJO, name: BAJO, slug: BAJO, logo_url: BAJO,
+               created_at: BAJO, updated_at: BAJO }
+
+  - table: store
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras el tenant este activo
+    subject: empresa
+    notes: >
+      latitude y longitude son del local comercial, no de una persona. Si algun dia se guardara
+      la ubicacion de un usuario, seria MEDIO y necesitaria consentimiento propio.
+    columns: { id: BAJO, tenant_id: BAJO, brand_id: BAJO, code: BAJO, name: BAJO,
+               address: BAJO, city: BAJO, latitude: BAJO, longitude: BAJO,
+               opening_hours: BAJO, allows_reserve: BAJO, allows_pickup: BAJO,
+               is_active: BAJO, created_at: BAJO, updated_at: BAJO }
+
+  - table: category
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras el tenant este activo
+    subject: empresa
+    columns: { id: BAJO, tenant_id: BAJO, parent_id: BAJO, name: BAJO,
+               canonical_key: BAJO, level: BAJO, created_at: BAJO }
+
+  - table: color
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras el tenant este activo
+    subject: empresa
+    columns: { id: BAJO, tenant_id: BAJO, name: BAJO, hex: BAJO,
+               canonical_id: BAJO, created_at: BAJO }
+
+  - table: product
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras el tenant este activo
+    subject: empresa
+    columns: { id: BAJO, tenant_id: BAJO, brand_id: BAJO, category_id: BAJO,
+               reference_code: BAJO, name: BAJO, description: BAJO, gender: BAJO,
+               material: BAJO, season: BAJO, attributes: BAJO, status: BAJO,
+               published_at: BAJO, created_at: BAJO, updated_at: BAJO }
+
+  - table: product_variant
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras el tenant este activo
+    subject: empresa
+    columns: { id: BAJO, tenant_id: BAJO, product_id: BAJO, sku: BAJO, color_id: BAJO,
+               size_label: BAJO, size_system: BAJO, barcode: BAJO, price: BAJO,
+               compare_price: BAJO, currency: BAJO, is_active: BAJO,
+               created_at: BAJO, updated_at: BAJO }
+
+  - table: stock
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras el tenant este activo
+    subject: empresa
+    columns: { tenant_id: BAJO, variant_id: BAJO, store_id: BAJO, on_hand: BAJO,
+               reserved: BAJO, available: BAJO, source: BAJO, updated_at: BAJO }
+
+  - table: size_chart
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: Versionada, no se borra. RN-015 exige reproducir recomendaciones antiguas
+    subject: empresa
+    columns: { id: BAJO, tenant_id: BAJO, brand_id: BAJO, category_id: BAJO,
+               gender: BAJO, size_system: BAJO, name: BAJO, created_at: BAJO }
+
+  - table: size_chart_version
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: No se borra. RN-015
+    subject: empresa
+    columns: { id: BAJO, tenant_id: BAJO, size_chart_id: BAJO, version: BAJO,
+               source: BAJO, effective_from: BAJO, is_active: BAJO, created_at: BAJO }
+
+  - table: size_chart_entry
+    store: supabase
+    classification: BAJO
+    legal_basis: Ejecucion de contrato
+    retention: No se borra. RN-015
+    subject: empresa
+    notes: >
+      Son rangos de talla de una marca, no medidas de una persona. La distincion importa:
+      un rango "pecho 920-979 mm" es dato de catalogo; "tu pecho mide 950 mm" es CRITICO.
+    columns: { id: BAJO, tenant_id: BAJO, version_id: BAJO, size_label: BAJO,
+               sort_order: BAJO, measurement_key: BAJO, min_mm: BAJO, max_mm: BAJO,
+               created_at: BAJO }
+
+  # ---- dispositivo: lo sensible --------------------------------------------
+  - entity: BodyProfileEntity
+    store: device_room
+    classification: CRITICO
+    legal_basis: Consentimiento especifico y revocable (finalidad BODY_MEASUREMENT)
+    retention: Mientras exista la cuenta. Se borra con ella (US-0106)
+    subject: persona
+    notes: >
+      Solo guarda el blob CIFRADO. No hay columnas chest, waist ni hip a proposito: si
+      existieran, alguien las llenaria en claro alguna vez. Lo que no se puede representar
+      no se puede filtrar.
+    columns:
+      id: BAJO
+      ciphertext: CRITICO
+      nonce: ALTO
+      schemaVersion: BAJO
+      updatedAt: BAJO
+
+  # ---- previstos, aun sin implementar --------------------------------------
+  - dataset: foto_de_captura
+    store: memory_only
+    classification: CRITICO
+    status: planned
+    sprint: 4
+    legal_basis: Consentimiento especifico (finalidad BODY_IMAGE)
+    retention: Se descarta al terminar el procesamiento. Nunca toca disco (RN-014)
+    subject: persona
+
+  - dataset: landmarks_de_pose
+    store: memory_only
+    classification: CRITICO
+    status: planned
+    sprint: 4
+    legal_basis: Consentimiento especifico (finalidad BODY_IMAGE)
+    retention: Duracion de la sesion
+    subject: persona
+
+  - dataset: clave_de_cifrado_del_perfil
+    store: device_keystore
+    classification: ALTO
+    status: planned
+    sprint: 2
+    legal_basis: Necesaria para la seguridad del tratamiento
+    retention: Se destruye al desinstalar o al eliminar la cuenta
+    subject: persona
+
+  - dataset: credenciales
+    store: supabase_auth
+    classification: ALTO
+    status: planned
+    sprint: 1
+    legal_basis: Ejecucion de contrato
+    retention: Mientras exista la cuenta
+    subject: persona
+    notes: Correo y hash Argon2id. Nunca contrasena reversible
+
+  - dataset: consentimientos
+    store: supabase
+    classification: MEDIO
+    status: planned
+    sprint: 1
+    legal_basis: Obligacion legal (evidencia del consentimiento)
+    retention: 5 anos tras la revocacion, como prueba de cumplimiento
+    subject: persona
+    notes: >
+      Guarda finalidad, version de politica, texto mostrado, fecha, IP y dispositivo.
+      Sin esa evidencia el consentimiento no es demostrable y por tanto no existe.
+
+  - dataset: sesion_de_espejo
+    store: memory_only
+    classification: CRITICO
+    status: planned
+    sprint: 21
+    legal_basis: Consentimiento en espacio fisico (EN-1410)
+    retention: Se borra al terminar la sesion, con evidencia auditable (RN-013)
+    subject: persona anonima
+    notes: >
+      Lo unico que sale del espejo son bandas de talla agregadas, nunca medidas (EN-1408).
+      El session_hash es aleatorio y no deriva de nada estable: dos visitas de la misma
+      persona no son correlacionables.
