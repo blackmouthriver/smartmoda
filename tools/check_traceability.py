@@ -101,9 +101,10 @@ def main():
 
     if stale:
         print()
-        print("Waivers que ya sobran (la regla si tiene prueba):")
+        print("Waivers caducos: la regla YA tiene prueba y sobra la excepcion.")
+        print("Retiralos de tools/traceability_waivers.txt; si no, la lista deja de ser cierta.")
         for r in stale:
-            print("   %s" % r)
+            print("   %s -> %s" % (r, ", ".join(sorted(covered[r]))))
 
     if missing:
         print()
@@ -116,11 +117,11 @@ def main():
         print()
         print("O declara la deuda en tools/traceability_waivers.txt si aun no toca implementarla.")
 
-    if missing and not args.report:
+    if (missing or stale) and not args.report:
         return 1
-    if not missing:
+    if not missing and not stale:
         print()
-        print("Todas las reglas documentadas tienen prueba o waiver.")
+        print("Todas las reglas documentadas tienen prueba o waiver, y ningun waiver sobra.")
     return 0
 
 

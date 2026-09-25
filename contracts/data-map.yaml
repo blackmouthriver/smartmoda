@@ -208,6 +208,88 @@ datasets:
                sort_order: BAJO, measurement_key: BAJO, min_mm: BAJO, max_mm: BAJO,
                created_at: BAJO }
 
+  # ---- servidor: identidad y consentimiento ---------------------------------
+  - table: app_user
+    store: supabase
+    classification: MEDIO
+    legal_basis: Ejecucion de contrato
+    retention: Mientras exista la cuenta. Se borra al eliminarla (US-0106)
+    subject: persona
+    notes: >
+      No pertenece a ningun tenant: el usuario se registra una vez en la plataforma y compra
+      en muchas tiendas (doc 10 §3). Una empresa nunca ve esta tabla.
+      is_adult se declara, no se infiere: no hay forma fiable de deducir la edad y suponerla
+      mal es exactamente el error que RN-022 no permite.
+    columns:
+      id: BAJO
+      display_name: MEDIO
+      locale: BAJO
+      unit_system: BAJO
+      is_adult: MEDIO
+      mfa_enrolled_at: BAJO
+      status: BAJO
+      created_at: BAJO
+      updated_at: BAJO
+      deleted_at: BAJO
+
+  - table: consent
+    store: supabase
+    classification: MEDIO
+    legal_basis: Obligacion legal (evidencia del consentimiento)
+    retention: >
+      5 anos tras la revocacion. La base legal de esta retencion es la obligacion legal, no
+      el consentimiento: es la prueba de que en su momento hubo uno valido, y uno que no se
+      puede demostrar no existe a efectos practicos.
+    subject: persona
+    notes: >
+      Una fila por otorgamiento, nunca un UPDATE. Revocar es insertar, no editar.
+      evidence guarda el texto literal mostrado, la IP en hash y el dispositivo.
+    columns:
+      id: BAJO
+      user_id: BAJO
+      purpose: MEDIO
+      policy_version: BAJO
+      granted: MEDIO
+      granted_at: BAJO
+      revoked_at: BAJO
+      evidence: MEDIO
+      created_at: BAJO
+
+  - table: erasure_task
+    store: supabase
+    classification: MEDIO
+    legal_basis: Obligacion legal (derecho de supresion)
+    retention: Se conserva como evidencia del borrado durante 1 ano
+    subject: persona
+    notes: >
+      RN-021. La cola hace verificable el plazo de 72 horas: se puede consultar que queda
+      pendiente y cuanto lleva esperando.
+    columns:
+      id: BAJO
+      user_id: BAJO
+      purpose: MEDIO
+      dataset: BAJO
+      due_at: BAJO
+      completed_at: BAJO
+      created_at: BAJO
+
+  - table: auth_attempt
+    store: supabase
+    classification: MEDIO
+    legal_basis: Interes legitimo (seguridad del tratamiento)
+    retention: 24 horas. Solo interesan dentro de la ventana de 15 minutos de EN-1510
+    subject: persona
+    notes: >
+      Guarda el hash del identificador, no el correo: esta tabla la podria leer quien logre
+      una inyeccion, y una lista de correos registrados ya es informacion aprovechable.
+      Ningun cliente la lee (politica FOR SELECT USING false).
+    columns:
+      id: BAJO
+      account_hash: MEDIO
+      succeeded: BAJO
+      ip_hash: MEDIO
+      attempted_at: BAJO
+
   # ---- dispositivo: lo sensible --------------------------------------------
   - entity: BodyProfileEntity
     store: device_room

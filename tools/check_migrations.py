@@ -36,6 +36,9 @@ EXEMPT = {
     "feature_catalog": "catalogo global de funcionalidades",
     "category": "tenant_id nullable: la taxonomia canonica es compartida",
     "color": "tenant_id nullable: la paleta canonica es compartida",
+    "consent": "el consentimiento es del usuario frente a la plataforma, no frente a una empresa",
+    "erasure_task": "deriva del consentimiento; mismo ambito",
+    "auth_attempt": "identidad de plataforma; ademas no la lee ningun cliente",
 }
 
 CREATE_TABLE = re.compile(
@@ -94,8 +97,13 @@ def main():
             problems.append((name, "sin FORCE ROW LEVEL SECURITY (el rol dueno ignoraria la politica)"))
         if not policies:
             problems.append((name, "sin ninguna politica RLS"))
-        elif name not in EXEMPT and not any("with check" in p for p in policies):
-            problems.append((name, "politica sin WITH CHECK: permitiria insertar en otro tenant"))
+        elif name not in EXEMPT:
+            # WITH CHECK solo tiene sentido donde se escribe. Una politica FOR SELECT no lo
+            # admite, asi que exigirselo seria un falso positivo.
+            escribibles = [p for p in policies if not re.search(r"^\s*for\s+select", p)]
+            if escribibles and not any("with check" in p for p in escribibles):
+                problems.append(
+                    (name, "politica de escritura sin WITH CHECK: dejaria insertar en otro tenant"))
 
     print("Aislamiento por tenant en migraciones")
     print("=" * 62)
