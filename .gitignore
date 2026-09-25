@@ -53,3 +53,7 @@ desktop.ini
 # Python
 __pycache__/
 *.pyc
+
+# Android
+local.properties
+android/*/schemas/

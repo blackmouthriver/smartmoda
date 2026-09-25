@@ -1,0 +1,68 @@
+# Catalogo de versiones. Fuente unica: ningun modulo declara una version a mano.
+[versions]
+agp = "8.7.3"
+kotlin = "2.0.21"
+coroutines = "1.9.0"
+coreKtx = "1.15.0"
+activityCompose = "1.9.3"
+composeBom = "2024.10.01"
+lifecycle = "2.8.7"
+navigation = "2.8.4"
+hilt = "2.52"
+hiltNavigation = "1.2.0"
+ksp = "2.0.21-1.0.25"
+room = "2.6.1"
+securityCrypto = "1.1.0-alpha06"
+splashscreen = "1.0.1"
+datastore = "1.1.1"
+junit5 = "5.11.3"
+kotest = "5.9.1"
+turbine = "1.2.0"
+mockk = "1.13.13"
+
+[libraries]
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
+androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+
+lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
+hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigation" }
+
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+
+junit5-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
+junit5-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

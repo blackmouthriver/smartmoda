@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      EN-1608 · Splash.
+      Usa la API del sistema operativo, sin actividad intermedia propia. El splash nunca
+      anade espera artificial: si el contenido esta listo antes, se corta.
+    -->
+    <style name="Theme.SmartModa.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/paper</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.SmartModa</item>
+    </style>
+
+    <style name="Theme.SmartModa" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

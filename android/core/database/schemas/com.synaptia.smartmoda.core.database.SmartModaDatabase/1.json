@@ -1,0 +1,58 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "7b26182470d5ca2a2db51bbaf13a535e",
+    "entities": [
+      {
+        "tableName": "body_profile",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `ciphertext` BLOB NOT NULL, `nonce` BLOB NOT NULL, `schemaVersion` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ciphertext",
+            "columnName": "ciphertext",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nonce",
+            "columnName": "nonce",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schemaVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7b26182470d5ca2a2db51bbaf13a535e')"
+    ]
+  }
+}

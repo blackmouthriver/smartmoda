@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debe coincidir con SmartModaColors.Paper y con contracts/design-tokens.json -->
+    <color name="paper">#FDFBFA</color>
+</resources>

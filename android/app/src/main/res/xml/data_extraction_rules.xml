@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ADR-0003: el perfil corporal NO sale del dispositivo, y eso incluye las copias de
+  seguridad del sistema. Si smartmoda.db entrara en un backup a la nube, el dato cifrado
+  saldria del control del usuario aunque siga cifrado.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="smartmoda.db" />
+        <exclude domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="smartmoda.db" />
+    </device-transfer>
+</data-extraction-rules>
