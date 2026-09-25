@@ -141,7 +141,7 @@ estimación en vez de descubrirlo como un error opaco el día que la pantalla pa
 
 | Qué | Dónde |
 |---|---|
-| SDK del proveedor (hCaptcha o Turnstile) | `android/feature/auth` |
+| SDK de **hCaptcha** (`com.hcaptcha:sdk`) — es el proveedor configurado | `android/feature/auth` |
 | Token adjunto en la petición | Al llamar a Supabase Auth |
 | Camino cuando el captcha falla | RN-019: degradar con mensaje claro, no dejar la pantalla muerta |
 
