@@ -49,3 +49,7 @@ desktop.ini
 
 # ---- Temporales de Office ----------------------------------------------
 ~$*
+
+# Python
+__pycache__/
+*.pyc

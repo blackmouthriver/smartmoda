@@ -46,7 +46,7 @@ object SizeRecommendationPolicy {
         val indices = hitByMeasurement.values.toSortedSet()
         val spread = indices.last() - indices.first()
 
-        val confidence = confidenceOf(spread, missing.size, chart.keyMeasurements.size)
+        val confidence = confidenceOf(spread, missing.size)
         val chosen = chooseIndex(hitByMeasurement, indices.toList(), profile.fitPreference, confidence)
         val alternative = alternativeFor(chosen, indices.toList(), chart, confidence)
 
@@ -97,10 +97,9 @@ object SizeRecommendationPolicy {
      * La confianza sale de dos senales: cuanto se dispersan las medidas entre tallas, y cuantas
      * medidas clave faltan. Los umbrales estan en ADR-0011 para el espejo y aqui para el movil.
      */
-    private fun confidenceOf(spread: Int, missingCount: Int, keyCount: Int): Confidence = when {
+    private fun confidenceOf(spread: Int, missingCount: Int): Confidence = when {
         spread == 0 && missingCount == 0 -> Confidence.HIGH
         spread <= 1 && missingCount <= 1 -> Confidence.MEDIUM
-        spread <= 1 || missingCount < keyCount -> Confidence.LOW
         else -> Confidence.LOW
     }
 
@@ -126,6 +125,8 @@ object SizeRecommendationPolicy {
             }
         }
 
+        // Dispersion mayor que una talla: gana la que reune mas medidas; si empatan, la mayor,
+        // porque entre apretar y sobrar, sobrar se devuelve menos.
         val byFrequency = hits.values.groupingBy { it }.eachCount()
         val maxCount = byFrequency.values.max()
         return byFrequency.filterValues { it == maxCount }.keys.max()

@@ -25,6 +25,9 @@ WAIVERS = os.path.join(ROOT, "tools", "traceability_waivers.txt")
 TEST_DIRS = ["shared-domain", "android", "web", "backend"]
 TEST_EXT = (".kt", ".kts", ".java", ".ts", ".tsx", ".py")
 
+# Declaracion de prueba en los lenguajes del proyecto: Kotlin/Java, Jest/Vitest, pytest.
+TEST_DECL = re.compile(r"(?:^|[^A-Za-z_])(?:fun|void|it|test|def)[\s(]")
+
 
 def documented_rules():
     """IDs de regla declarados en la documentacion."""
@@ -52,9 +55,15 @@ def rules_covered_by_tests():
                     text = open(path, encoding="utf-8").read()
                 except OSError:
                     continue
-                for rid in re.findall(r"RN[_-]?(\d{3})", text):
-                    found.setdefault("RN-" + rid, set()).add(
-                        os.path.relpath(path, ROOT).replace("\\", "/"))
+                # Solo cuenta si el ID esta en el NOMBRE de una prueba, no en cualquier
+                # comentario del archivo. Un comentario que dice "RN-009 se verifica en otro
+                # sitio" no cubre RN-009, y contarlo daria una falsa sensacion de cobertura.
+                for line in text.splitlines():
+                    if not TEST_DECL.search(line):
+                        continue
+                    for rid in re.findall(r"RN[_-]?(\d{3})", line):
+                        found.setdefault("RN-" + rid, set()).add(
+                            os.path.relpath(path, ROOT).replace("\\", "/"))
     return found
 
 

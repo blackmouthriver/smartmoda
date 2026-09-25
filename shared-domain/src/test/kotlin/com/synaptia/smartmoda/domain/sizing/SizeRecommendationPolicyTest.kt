@@ -7,6 +7,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 
 /**
  * Cada prueba lleva en el nombre el ID de la regla de negocio que verifica.
@@ -308,5 +309,97 @@ class SizeRecommendationPolicyTest {
         val b = SizeRecommendationPolicy.recommend(perfilEntreMyL(FitPreference.REGULAR), camisas)
 
         a shouldBe b
+    }
+
+    @Test
+    fun `una talla a la que le falta el rango de una medida no descarta la tabla entera`() {
+        // Caso real: una marca carga pecho y cintura en todas las tallas pero olvida el hombro
+        // en la XL. Debe seguir recomendando con el resto, no caerse ni ignorar la tabla.
+        val incompleta = camisas.copy(
+            sizesInOrder = camisas.sizesInOrder.mapIndexed { i, entry ->
+                if (i == 3) entry.copy(ranges = entry.ranges - MeasurementKey.SHOULDER) else entry
+            },
+        )
+
+        val r = SizeRecommendationPolicy.recommend(perfilM(), incompleta)
+
+        r.shouldBeInstanceOf<SizeRecommendation.Recommended>()
+        r.size shouldBe "M"
+    }
+
+    @Test
+    fun `medidas que apuntan a tallas no contiguas dan confianza baja`() {
+        // Pecho de S y cintura de XL: no es un cuerpo que la tabla represente bien.
+        // Lo honesto es bajar la confianza, no fingir precision.
+        val dispar = BodyProfile.ofManual(
+            MeasurementKey.CHEST to mm(900),
+            MeasurementKey.WAIST to mm(930),
+            MeasurementKey.SHOULDER to mm(470),
+        )
+
+        val r = SizeRecommendationPolicy.recommend(dispar, camisas)
+
+        r.shouldBeInstanceOf<SizeRecommendation.Recommended>()
+        r.confidence shouldBe Confidence.LOW
+        r.alternative.shouldNotBeNull()
+    }
+
+    @Test
+    fun `con tallas no contiguas gana la que reune mas medidas`() {
+        // Dos medidas apuntan a L y una a S: gana L.
+        val dosContraUna = BodyProfile.ofManual(
+            MeasurementKey.CHEST to mm(1000),
+            MeasurementKey.WAIST to mm(870),
+            MeasurementKey.SHOULDER to mm(425),
+        )
+
+        val r = SizeRecommendationPolicy.recommend(dosContraUna, camisas)
+
+        r.shouldBeInstanceOf<SizeRecommendation.Recommended>()
+        r.size shouldBe "L"
+    }
+
+    @Test
+    fun `RN_016 construir una recomendacion con confianza NONE es imposible`() {
+        // La regla deja de depender de que alguien se acuerde: el tipo la impone.
+        assertFailsWith<IllegalArgumentException> {
+            SizeRecommendation.Recommended(
+                size = "M",
+                confidence = Confidence.NONE,
+                alternative = null,
+                explanation = Explanation(emptyMap(), emptyMap(), emptySet(), null),
+                chartReference = "x@v1",
+            )
+        }
+    }
+
+    @Test
+    fun `RN_017 con una sola talla en la tabla y confianza no alta no se inventa alternativa`() {
+        val tallaUnica = camisas.copy(sizesInOrder = listOf(camisas.sizesInOrder[1]))
+        val sinHombro = BodyProfile.ofManual(
+            MeasurementKey.CHEST to mm(950),
+            MeasurementKey.WAIST to mm(800),
+        )
+
+        val r = SizeRecommendationPolicy.recommend(sinHombro, tallaUnica)
+
+        r.shouldBeInstanceOf<SizeRecommendation.Recommended>()
+        r.confidence shouldBe Confidence.MEDIUM
+        r.alternative.shouldBeNull() // no hay contigua que ofrecer, y no se fabrica una
+    }
+
+    @Test
+    fun `un rango invertido no se puede construir`() {
+        assertFailsWith<IllegalArgumentException> { SizeRange(mm(1000), mm(900)) }
+    }
+
+    @Test
+    fun `una tabla sin medidas clave no se puede construir`() {
+        assertFailsWith<IllegalArgumentException> { camisas.copy(keyMeasurements = emptySet()) }
+    }
+
+    @Test
+    fun `la version de una tabla empieza en uno`() {
+        assertFailsWith<IllegalArgumentException> { camisas.copy(version = 0) }
     }
 }
