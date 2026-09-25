@@ -38,8 +38,11 @@ CONFIG = {
     # son un millon de combinaciones, y sin limite se agotan en minutos.
     "rate_limit_verify": 30,
 
-    # Correos por hora. Contiene el abuso del reenvio como forma de spam a terceros.
-    "rate_limit_email_sent": 30,
+    # rate_limit_email_sent NO se toca a proposito.
+    # El valor por defecto del plan gratuito es 2/hora, mas estricto que cualquier objetivo
+    # razonable. Subirlo seria aflojar un limite en un script que endurece, y ademas no
+    # funcionaria: ese tope viene del SMTP compartido de Supabase. Si algun dia hace falta
+    # mas volumen, la solucion es SMTP propio, no un numero mayor aqui.
 
     # Recuperaciones de contrasena por hora.
     "rate_limit_token_refresh": 150,
@@ -51,8 +54,11 @@ CONFIG = {
     # Longitud minima de contrasena. Por debajo de 12 el espacio de busqueda es abordable.
     "password_min_length": 12,
 
-    # Exige mezcla de tipos de caracter.
-    "password_required_characters": "abcdefghijklmnopqrstuvwxyz:ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789",
+    # password_required_characters se deja SIN configurar, tambien a proposito.
+    # Las reglas de composicion (una mayuscula, un digito, un simbolo) producen contrasenas
+    # predecibles del tipo Password1! y empeoran la usabilidad sin subir la entropia real.
+    # NIST SP 800-63B recomienda explicitamente no usarlas y apoyarse en longitud minima mas
+    # lista de contrasenas filtradas, que es justo lo que hacen las dos lineas de arriba.
 
     # Rechaza contrasenas que aparecen en filtraciones conocidas. Supabase lo consulta con
     # k-anonimato: envia un prefijo del hash, nunca la contrasena.

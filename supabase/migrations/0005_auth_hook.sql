@@ -14,6 +14,15 @@
 --   3. supabase/tests/ compara ambas con los mismos casos, y CI lo ejecuta
 -- En el Sprint 6, con core-api, esta funcion se retira y vuelve a haber una sola.
 
+-- ---------------------------------------------------------------- pgcrypto
+--
+-- digest() viene de pgcrypto. En Supabase las extensiones viven en el esquema `extensions`,
+-- no en `public`, asi que una funcion con search_path acotado no la encuentra si no se
+-- nombra ese esquema. En un Postgres desnudo (las pruebas en Docker) el esquema no existe,
+-- de ahi que se cree antes.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+
 -- ---------------------------------------------------------------- constantes
 --
 -- Una vista y no constantes repartidas por el cuerpo de la funcion: asi el valor que usa la
@@ -115,7 +124,7 @@ create or replace function app.password_verification_hook(event jsonb)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, app
+set search_path = public, app, extensions
 as $$
 declare
     v_user_id  uuid   := (event->>'user_id')::uuid;
@@ -160,6 +169,7 @@ comment on function app.password_verification_hook(jsonb) is
 -- de todos los demas: una funcion SECURITY DEFINER ejecutable por cualquiera seria una via
 -- para escribir en auth_attempt a voluntad y falsear el historial.
 grant usage on schema app to supabase_auth_admin;
+grant usage on schema extensions to supabase_auth_admin;
 grant execute on function app.password_verification_hook(jsonb) to supabase_auth_admin;
 grant select, insert on table auth_attempt to supabase_auth_admin;
 grant usage, select on sequence auth_attempt_id_seq to supabase_auth_admin;
