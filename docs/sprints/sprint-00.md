@@ -15,10 +15,10 @@ tomar las decisiones que son caras de revertir.
 | Ítem | SP | Estado | Qué falta |
 |---|---|---|---|
 | `US-0001` Contrato de producto y alcance MVP | 3 | 🟢 **Hecho** | — |
-| `EN-0002` Arquitectura modular y offline-first | 5 | 🟡 **En curso** | Esqueleto Android |
+| `EN-0002` Arquitectura modular y offline-first | 5 | 🟢 **Hecho** | — |
 | `EN-0003` Repositorio, estrategia Git y plantillas | 3 | 🟢 **Hecho** | — |
-| `EN-0004` Integración continua | 5 | 🟡 **En curso** | Falta `gradlew`; validar en GitHub |
-| `EN-0005` Entornos y gestión de secretos | 3 | 🟡 **En curso** | Crear proyecto Supabase y cargar secretos en GitHub |
+| `EN-0004` Integración continua | 5 | 🟢 **Hecho** | Validar el primer run en GitHub |
+| `EN-0005` Entornos y gestión de secretos | 3 | 🟡 **Casi** | Crear el proyecto Supabase y cargar 2 secretos en GitHub |
 | `EN-1501` Mapa de datos y modelo de amenazas | 5 | 🔴 **Pendiente** | Inventario de campos con clasificación y retención |
 
 ---

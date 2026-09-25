@@ -46,6 +46,44 @@ jobs:
           name: cobertura-shared-domain
           path: shared-domain/build/reports/jacoco/
 
+  # ---------------------------------------------------------------- android
+  android:
+    name: Android · compilar y probar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # EN-0005: los secretos llegan por entorno, nunca del repositorio.
+      # La clave anon es publica por diseno; lo que protege los datos es el RLS.
+      - name: Compilar y probar
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: ./gradlew assembleDebug test --no-daemon
+
+  # ---------------------------------------------------------------- aislamiento
+  aislamiento:
+    name: Tablas aisladas por tenant
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # AUT-22: toda tabla de negocio con tenant_id NOT NULL, RLS forzado y WITH CHECK
+      - name: Verificar ADR-0002 en las migraciones
+        run: python tools/check_migrations.py
+
   # ---------------------------------------------------------------- trazabilidad
   trazabilidad:
     name: Reglas de negocio con prueba
