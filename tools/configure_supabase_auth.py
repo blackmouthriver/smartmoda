@@ -75,6 +75,20 @@ CONFIG = {
 }
 
 
+# Ajustes que se informan pero NO se aplican. Se configuran en el panel porque llevan
+# secretos del proveedor de CAPTCHA, y un PATCH generico los dejaria a medias.
+REPORT_ONLY = {
+    "security_captcha_enabled": (True, "CAPTCHA activo. En plan gratuito es la mejor defensa "
+                                       "disponible: corre en el endpoint de Supabase"),
+    "security_captcha_provider": (None, "hcaptcha o turnstile"),
+    "rate_limit_otp": (None, "solicitudes de OTP por hora"),
+    "rate_limit_sms_sent": (None, "SMS por hora"),
+    "security_manual_linking_enabled": (False, "vinculacion manual de identidades"),
+    "security_update_password_require_reauthentication": (
+        True, "cambiar contrasena exige volver a autenticarse"),
+}
+
+
 def request(method, path, payload=None):
     url = API + path
     data = json.dumps(payload).encode() if payload is not None else None
@@ -118,8 +132,29 @@ def main():
         print("%-42s %-14s %s%s" % (key, str(ahora)[:14], str(objetivo)[:20], marca))
 
     print()
+    print("VERIFICACIONES (se informan, no se aplican desde aqui)")
+    print("-" * 66)
+    avisos = []
+    for key, (esperado, nota) in REPORT_ONLY.items():
+        ahora = actual.get(key)
+        if esperado is None:
+            marca = "  "
+        elif str(ahora) == str(esperado):
+            marca = "ok"
+        else:
+            marca = "!!"
+            avisos.append((key, ahora, esperado, nota))
+        print("  [%s] %-46s %s" % (marca, key, str(ahora)[:18]))
+    if avisos:
+        print()
+        for key, ahora, esperado, nota in avisos:
+            print("  !! %s = %s, deberia ser %s" % (key, ahora, esperado))
+            print("     %s" % nota)
+            print("     Se configura en el panel: Authentication > Attack Protection")
+
+    print()
     if not cambios:
-        print("Todo ya esta como debe. Nada que aplicar.")
+        print("Todo lo aplicable ya esta como debe.")
         return 0
 
     if args.check:

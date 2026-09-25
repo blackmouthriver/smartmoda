@@ -130,6 +130,25 @@ contra Postgres real). No se retira: se activa el día que ocurra lo primero de 
 
 Riesgo `R-33`, aceptado con fecha de revisión.
 
+### Consecuencia de activar CAPTCHA en las pantallas de acceso
+
+Con CAPTCHA activo, `signInWithPassword` y `signUp` **exigen un token de captcha**. Sin él,
+Supabase rechaza la petición.
+
+Impacta a `US-0102` y `US-0104`: hay que integrar el SDK del proveedor en Android antes de que
+registro e inicio de sesión funcionen. Es trabajo acotado, pero conviene tenerlo en la
+estimación en vez de descubrirlo como un error opaco el día que la pantalla parezca terminada.
+
+| Qué | Dónde |
+|---|---|
+| SDK del proveedor (hCaptcha o Turnstile) | `android/feature/auth` |
+| Token adjunto en la petición | Al llamar a Supabase Auth |
+| Camino cuando el captcha falla | RN-019: degradar con mensaje claro, no dejar la pantalla muerta |
+
+Y una nota de accesibilidad: un CAPTCHA visual es una barrera para quien usa lector de
+pantalla. El proveedor debe ofrecer alternativa accesible, y eso entra en la revisión de
+`EN-1503` (RNF-06).
+
 ### Pendiente concreto
 
 1. Configurar límites de tasa en el panel de Supabase.
